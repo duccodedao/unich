@@ -217,74 +217,76 @@
 
   const savedUID = localStorage.getItem('okx_uid');
   const savedSol = localStorage.getItem('sol_address');
+  const savedOldGmail = localStorage.getItem('gmail_old');
+  const savedNewGmail = localStorage.getItem('gmail_new');
 
-  function renderSubmittedForm(uid, sol) {
+  function renderSubmittedForm(uid, sol, oldGmail, newGmail) {
     formContainer.innerHTML = `
-      <p><strong>UID:</strong> ${uid}</p>
-      <p><strong>Address:</strong> ${sol}</p>
-      <p style="color: green;">Your info is saved and locked</p>
+      <p><strong>✅ UID:</strong> ${uid}</p>
+      <p><strong>✅ Solana Address:</strong> ${sol}</p>
+      <p><strong>📧 Old Gmail (Unich):</strong> ${oldGmail || 'Not provided'}</p>
+      <p><strong>📨 New Gmail (from Telegram Bot):</strong> ${newGmail}</p>
+      <p style="color: green;">Your information has been saved and cannot be modified. ✅</p>
     `;
   }
 
-  if (savedUID && savedSol) {
-    renderSubmittedForm(savedUID, savedSol);
+  if (savedUID && savedSol && savedNewGmail) {
+    renderSubmittedForm(savedUID, savedSol, savedOldGmail, savedNewGmail);
   } else {
     formContainer.innerHTML = `
       <input type="text" id="uid" placeholder="Enter your OKX UID" style="padding: 8px; width: 100%; margin-bottom: 10px;" />
-      <input type="text" id="sol" placeholder="Enter your Solana Address" style="padding: 8px; width: 100%; margin-bottom: 10px;" />
+      <input type="text" id="sol" placeholder="Enter your Solana (SOL) address" style="padding: 8px; width: 100%; margin-bottom: 10px;" />
+      <input type="email" id="gmailOld" placeholder="Old Unich Gmail (optional)" style="padding: 8px; width: 100%; margin-bottom: 10px;" />
+      <input type="email" id="gmailNew" placeholder="New Gmail from Telegram Bot (required)" style="padding: 8px; width: 100%; margin-bottom: 10px;" />
       <button id="submitBtn" style="padding: 10px 20px; background-color: #A4B200; color: white; border: none; border-radius: 6px; cursor: pointer;">
-        Submit Info
+        Submit & Save
       </button>
+      <p style="margin-top: 10px; font-size: 12px; color: gray;">
+        💡 You must use a new Gmail created through <a href="https://t.me/UnichAirdropBot/start" target="_blank" style="color: #007bff; text-decoration: underline;">this Telegram Bot</a> to qualify for the airdrop.
+      </p>
     `;
 
     document.getElementById('submitBtn').addEventListener('click', () => {
       const uid = document.getElementById('uid').value.trim();
       const sol = document.getElementById('sol').value.trim();
+      const gmailOld = document.getElementById('gmailOld').value.trim();
+      const gmailNew = document.getElementById('gmailNew').value.trim();
 
-      if (!uid || !sol) {
-        alert("Please fill in both UID and Solana address.");
+      if (!uid || !sol || !gmailNew) {
+        alert("Please fill in your OKX UID, Solana address, and new Gmail.");
+        return;
+      }
+
+      if (!gmailNew.includes('@') || !gmailNew.includes('.')) {
+        alert("Invalid Gmail address.");
         return;
       }
 
       localStorage.setItem('okx_uid', uid);
       localStorage.setItem('sol_address', sol);
-      renderSubmittedForm(uid, sol);
+      localStorage.setItem('gmail_old', gmailOld);
+      localStorage.setItem('gmail_new', gmailNew);
+
+      renderSubmittedForm(uid, sol, gmailOld, gmailNew);
     });
   }
 
-  // Web3 Connect Wallet OKX (EVM)
+  // OKX Wallet connect function
   async function connectOKXWallet() {
     if (typeof window.okxwallet === 'undefined') {
-      alert('Please install OKX Wallet extension to connect.');
+      alert('Please install OKX Wallet extension first.');
       return;
     }
 
     try {
       const accounts = await window.okxwallet.request({ method: 'eth_requestAccounts' });
       const account = accounts[0];
-      alert('Connected Wallet Address:\n' + account);
+      alert('Connected to OKX Wallet:\n' + account);
     } catch (err) {
-      console.error('Connect error:', err);
-      alert('Connection failed.');
+      console.error('Connection error:', err);
+      alert('Failed to connect wallet.');
     }
   }
-
-  // Optional: Auto add connect button on page
-  const header = document.querySelector('header');
-  const connectBtn = document.createElement('button');
-  connectBtn.textContent = "Connect OKX Wallet";
-  connectBtn.style = `
-    margin-left: auto;
-    padding: 8px 16px;
-    background: #A4B200;
-    border: none;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-  `;
-  connectBtn.onclick = connectOKXWallet;
-  header.appendChild(connectBtn);
 </script>
 
 </body>
